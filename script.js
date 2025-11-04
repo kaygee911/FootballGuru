@@ -89,29 +89,44 @@ async function wireGate() {
   if (!gate || !app || !input || !btn) return;
 
   btn.onclick = async () => {
-    const name = (input.value || "").trim().toLowerCase();
-    if (!name) {
-      alert("Please enter your name.");
-      return;
-    }
+  const raw = (input.value || "").trim();
+  const nameTyped = raw.replace(/\s+/g, " ").trim();
+  const nameLower = nameTyped.toLowerCase();
+  if (!nameLower) { alert("Please enter your name."); return; }
 
-    gate.style.display = "none";
-    app.style.display = "block";
+  gate.style.display = "none";
+  app.style.display  = "block";
 
-    if (name === "admin") {
-      // Admin path: Show only admin dashboard + auth form
-      adminDash.style.display = "block";
-      wireAdminAuth();
-    } else {
-      // User path: Save name, show user dashboard
-      const db = window._fb.db;
-      await setDoc(doc(db, "users", u.uid), { name, createdAt: new Date() }, { merge: true });
-      renderMe();
-      userDash.style.display = "block";
-      renderPredictions();
-      renderLeaderboard();
-    }
-  };
+  if (nameLower === "admin") {
+    // admin path
+    adminDash.style.display = "block";
+    wireAdminAuth();
+    return;
+  }
+
+  // players-only check
+  const db = window._fb.db;
+  const { query, where } = await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js");
+  const q = query(collection(db, "players"), where("nameLower", "==", nameLower));
+  const snap = await getDocs(q);
+  if (snap.empty) {
+    // not on allowlist
+    app.style.display = "none";
+    gate.style.display = "block";
+    alert("You're not on the players list yet. Ask the admin to add you.");
+    return;
+  }
+
+  // allowed: save name to users/{uid} and continue
+  const u = window._fb.user;
+  await setDoc(doc(db, "users", u.uid), { name: nameTyped, createdAt: new Date() }, { merge: true });
+  const userDash = document.getElementById("user-dashboard");
+  if (userDash) userDash.style.display = "block";
+  renderMe();
+  renderPredictions();
+  renderLeaderboard();
+};
+
 }
 
 
