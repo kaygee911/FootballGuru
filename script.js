@@ -3,7 +3,7 @@ import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 
 // App state placeholders (hook these to Firebase later)
@@ -131,7 +131,7 @@ async function renderLeaderboard() {
   const db = window._fb?.db;
   if (!db) return;
 
-  // fetch all results
+  // 1) Load results
   const resultsSnap = await getDocs(collection(db, "results"));
   const results = {};
   resultsSnap.forEach(d => {
@@ -139,50 +139,56 @@ async function renderLeaderboard() {
     results[d.id] = { home: Number(v.home ?? 0), away: Number(v.away ?? 0) };
   });
 
-  // fetch all picks
+  // 2) Load picks and accumulate totals
   const picksSnap = await getDocs(collection(db, "picks"));
-  const totals = {}; // { uid: points }
+  const totals = {};              // { uid: points }
+  const uids = new Set();         // collect unique users
   picksSnap.forEach(d => {
     const data = d.data();
     const uid = String(d.id).split("_")[0];
+    uids.add(uid);
     const mid = data.matchId;
     const pick = { home: Number(data.home ?? 0), away: Number(data.away ?? 0) };
     const res  = results[mid];
-    const pts = scorePick(pick, res);
+    const pts  = scorePick(pick, res);
     totals[uid] = (totals[uid] || 0) + pts;
   });
 
-  // sort leaderboard
-  const rows = Object.entries(totals)
-    .map(([uid, pts]) => ({ uid, pts }))
+  // 3) Fetch user names (no await inside map)
+  const names = {};
+  for (const uid of uids) {
+    const s = await getDoc(doc(db, "users", uid));
+    names[uid] = s.exists() ? (s.data().name || uid.slice(0,6)) : uid.slice(0,6);
+  }
+
+  // 4) Sort and compute movement (Δ)
+  const rows = Object.entries(totals).map(([uid, pts]) => ({ uid, pts }))
     .sort((a, b) => b.pts - a.pts);
 
-  // compute places moved (Δ) vs previous render
   const prevOrder = state.prevOrder || {};
   const currOrder = {};
   rows.forEach((r, i) => { currOrder[r.uid] = i + 1; });
   rows.forEach((r, i) => {
     const prev = prevOrder[r.uid] || i + 1;
-    r.delta = prev - (i + 1); // positive = moved up
+    r.delta = prev - (i + 1);
   });
   state.prevOrder = currOrder;
 
-  // render table
-  const root = document.body;
+  // 5) Render
   let lb = document.getElementById("leaderboard");
   if (!lb) {
     lb = document.createElement("div");
     lb.id = "leaderboard";
-    root.appendChild(lb);
+    document.body.appendChild(lb);
   }
-  const bodyArr = await Promise.all(rows.map(async (r, i) => {
-    const nameSnap = await getDoc(doc(db, "users", r.uid));
-    const name = nameSnap.exists() ? nameSnap.data().name : r.uid.slice(0, 6);
-    const delta = r.delta === 0 ? "0" : (r.delta > 0 ? `+${r.delta}` : `${r.delta}`);
-    return `<tr><td>${i + 1}</td><td>${name}</td><td>${r.pts}</td><td>${delta}</td></tr>`;
-  }));
 
-  const body = bodyArr.join("") || `<tr><td>–</td><td>No picks</td><td>0</td><td>0</td></tr>`;
+  const body = rows.length
+    ? rows.map((r, i) => {
+        const delta = r.delta === 0 ? "0" : (r.delta > 0 ? `+${r.delta}` : `${r.delta}`);
+        const nm = names[r.uid];
+        return `<tr><td>${i + 1}</td><td>${nm}</td><td>${r.pts}</td><td>${delta}</td></tr>`;
+      }).join("")
+    : `<tr><td>–</td><td>No picks</td><td>0</td><td>0</td></tr>`;
 
   lb.innerHTML = `
     <h2>Leaderboard</h2>
@@ -190,7 +196,7 @@ async function renderLeaderboard() {
       <thead><tr><th>#</th><th>User</th><th>Pts</th><th>Δ</th></tr></thead>
       <tbody>${body}</tbody>
     </table>
-    <p><em>(User shows first 6 chars of ID. We’ll add nicknames later.)</em></p>
+    <p><em>(Δ = places moved since last refresh)</em></p>
   `;
 }
 
