@@ -39,6 +39,8 @@ async function wireGate() {
 
     gate.style.display = "none";
     app.style.display  = "block";
+    const userDash = document.getElementById("user-dashboard");
+    if (userDash) userDash.style.display = "block";
 
     renderMe();
     ensureAdminView();
