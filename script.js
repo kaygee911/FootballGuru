@@ -357,8 +357,8 @@ async function renderLeaderboard() {
 
   // 2) Load picks and accumulate totals
   const picksSnap = await getDocs(collection(db, "picks"));
-  const totals = {};              // { uid: points }
-  const uids = new Set();         // collect unique users
+  const totals = {};      // { uid: points }
+  const uids = new Set(); // collect unique users
   picksSnap.forEach(d => {
     const data = d.data();
     const uid = String(d.id).split("_")[0];
@@ -370,30 +370,45 @@ async function renderLeaderboard() {
     totals[uid] = (totals[uid] || 0) + pts;
   });
 
-  // 3b) Load allowed players (names)
-const playersSnap = await getDocs(collection(db, "players"));
-const allowed = new Set();
-playersSnap.forEach(d => {
-  const v = d.data();
-  if (v && v.nameLower) allowed.add(String(v.nameLower));
-});
+  // 3) Fetch user names
+  const names = {};
+  for (const uid of uids) {
+    const s = await getDoc(doc(db, "users", uid));
+    names[uid] = s.exists() ? (s.data().name || uid.slice(0,6)) : uid.slice(0,6);
+  }
 
-// 4) Build rows ONLY for allowed players
-let rows = Object.entries(totals)
-  .filter(([uid]) => {
-    const nm = names[uid] || uid.slice(0,6);
-    return allowed.has(nm.toLowerCase());
-  })
-  .map(([uid, pts]) => ({ uid, pts }))
-  .sort((a, b) => b.pts - a.pts);
+  // 3b) Load allowed players (by nameLower)
+  const playersSnap = await getDocs(collection(db, "players"));
+  const allowed = new Set();
+  playersSnap.forEach(d => {
+    const v = d.data();
+    if (v && v.nameLower) allowed.add(String(v.nameLower));
+  });
 
+  // 4) Build rows ONLY for allowed players (match by name)
+  let rows = Object.entries(totals)
+    .filter(([uid]) => allowed.has((names[uid] || "").toLowerCase()))
+    .map(([uid, pts]) => ({ uid, pts }))
+    .sort((a, b) => b.pts - a.pts);
 
-  // 5) Render
+  // 5) Compute movement (Δ)
+  const prevOrder = state.prevOrder || {};
+  const currOrder = {};
+  rows.forEach((r, i) => { currOrder[r.uid] = i + 1; });
+  rows.forEach((r, i) => {
+    const prev = prevOrder[r.uid] || i + 1;
+    r.delta = prev - (i + 1);
+  });
+  state.prevOrder = currOrder;
+
+  // 6) Render into existing #leaderboard
   let lb = document.getElementById("leaderboard");
   if (!lb) {
+    // fall back if missing
     lb = document.createElement("div");
     lb.id = "leaderboard";
-    document.body.appendChild(lb);
+    const userDash = document.getElementById("user-dashboard") || document.body;
+    userDash.appendChild(lb);
   }
 
   const body = rows.length
@@ -402,7 +417,7 @@ let rows = Object.entries(totals)
         const nm = names[r.uid];
         return `<tr><td>${i + 1}</td><td>${nm}</td><td>${r.pts}</td><td>${delta}</td></tr>`;
       }).join("")
-    : `<tr><td>–</td><td>No picks</td><td>0</td><td>0</td></tr>`;
+    : `<tr><td>–</td><td>No players</td><td>0</td><td>0</td></tr>`;
 
   lb.innerHTML = `
     <h2>Leaderboard</h2>
@@ -410,9 +425,10 @@ let rows = Object.entries(totals)
       <thead><tr><th>#</th><th>User</th><th>Pts</th><th>Δ</th></tr></thead>
       <tbody>${body}</tbody>
     </table>
-    <p><em>(Δ = places moved since last refresh)</em></p>
+    <p><em>(Only players added by admin are shown.)</em></p>
   `;
 }
+
 
 // Demo boot
 //enderPredictions();
