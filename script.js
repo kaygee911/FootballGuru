@@ -35,8 +35,7 @@ async function waitForUser() {
 function renderPredictions() {
   const root = document.body;
   const containerId = "predictions";
-  const userId = window._fb?.user?.uid;
-  
+
   let container = document.getElementById(containerId);
   if (!container) {
     container = document.createElement("div");
@@ -50,27 +49,34 @@ function renderPredictions() {
         <label>${m.home} goals: <input type="number" min="0" value="0" class="home"></label>
         <label>${m.away} goals: <input type="number" min="0" value="0" class="away"></label>
         <button class="save">Save Pick</button>
+        <button class="save-result">Save Result (admin)</button>
       </div>
     </div>
   `).join("");
 
   container.addEventListener("click", async (e) => {
+    const wrap = e.target.closest("[data-id]");
+    if (!wrap) return;
+    const id = wrap.getAttribute("data-id");
+    const home = parseInt(wrap.querySelector(".home").value || "0", 10);
+    const away = parseInt(wrap.querySelector(".away").value || "0", 10);
+
     if (e.target.classList.contains("save")) {
-      const wrap = e.target.closest("[data-id]");
-      const id = wrap.getAttribute("data-id");
-      const home = parseInt(wrap.querySelector(".home").value || "0", 10);
-      const away = parseInt(wrap.querySelector(".away").value || "0", 10);
-  
       const user = await waitForUser();
-      if (!user) {
-        alert("Still signing in—try again in a moment.");
-        return;
-      }
-  
+      if (!user) { alert("Still signing in—try again in a moment."); return; }
       const db = window._fb.db;
       const pickRef = doc(db, "picks", `${user.uid}_${id}`);
       await setDoc(pickRef, { matchId: id, home, away, timestamp: new Date() });
       alert("Pick saved to database!");
+    }
+
+    if (e.target.classList.contains("save-result")) {
+      const user = await waitForUser();
+      if (!user) { alert("Still signing in—try again in a moment."); return; }
+      const db = window._fb.db;
+      const resultRef = doc(db, "results", id);
+      await setDoc(resultRef, { matchId: id, home, away, timestamp: new Date() });
+      alert("Result saved!");
     }
   });
 }
