@@ -370,25 +370,23 @@ async function renderLeaderboard() {
     totals[uid] = (totals[uid] || 0) + pts;
   });
 
-  // 3) Fetch user names (no await inside map)
-  const names = {};
-  for (const uid of uids) {
-    const s = await getDoc(doc(db, "users", uid));
-    names[uid] = s.exists() ? (s.data().name || uid.slice(0,6)) : uid.slice(0,6);
-  }
+  // 3b) Load allowed players (names)
+const playersSnap = await getDocs(collection(db, "players"));
+const allowed = new Set();
+playersSnap.forEach(d => {
+  const v = d.data();
+  if (v && v.nameLower) allowed.add(String(v.nameLower));
+});
 
-  // 4) Sort and compute movement (Δ)
-  const rows = Object.entries(totals).map(([uid, pts]) => ({ uid, pts }))
-    .sort((a, b) => b.pts - a.pts);
+// 4) Build rows ONLY for allowed players
+let rows = Object.entries(totals)
+  .filter(([uid]) => {
+    const nm = names[uid] || uid.slice(0,6);
+    return allowed.has(nm.toLowerCase());
+  })
+  .map(([uid, pts]) => ({ uid, pts }))
+  .sort((a, b) => b.pts - a.pts);
 
-  const prevOrder = state.prevOrder || {};
-  const currOrder = {};
-  rows.forEach((r, i) => { currOrder[r.uid] = i + 1; });
-  rows.forEach((r, i) => {
-    const prev = prevOrder[r.uid] || i + 1;
-    r.delta = prev - (i + 1);
-  });
-  state.prevOrder = currOrder;
 
   // 5) Render
   let lb = document.getElementById("leaderboard");
