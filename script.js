@@ -215,7 +215,6 @@ async function renderLeaderboard() {
 renderPredictions();
 renderLeaderboard();
 ensureUserName(); // ask for player name
+renderMe(); // show player name at the top of the page
 
-// Example: set a final result later (you can test scoring by uncommenting)
-// setResult("m1", 1, 0);
-// renderLeaderboard();
+
