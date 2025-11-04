@@ -156,6 +156,11 @@ async function ensureAdminView() {
   document.querySelectorAll(".save-result").forEach(btn => {
     btn.style.display = isAdmin ? "" : "none";
   });
+
+  if (isAdmin) {
+  wireAdminPlayers(); //admin can add/list players
+}
+
 }
 
 async function ensureUserName() {
@@ -179,6 +184,58 @@ async function ensureUserName() {
     if (!name) alert("Name cannot be empty.");
   }
   await setDoc(profileRef, { name, createdAt: new Date() });
+}
+
+async function wireAdminPlayers() {
+  const db = window._fb?.db;
+  if (!db) return;
+
+  const nameInput = document.getElementById("player-name");
+  const addBtn    = document.getElementById("add-player");
+  const msgEl     = document.getElementById("player-msg");
+  const listEl    = document.getElementById("player-list");
+  if (!nameInput || !addBtn || !msgEl || !listEl) return;
+
+  const say = (t) => { msgEl.textContent = t; };
+
+  // Add player (to a simple allowlist)
+  addBtn.onclick = async () => {
+    const nameRaw = (nameInput.value || "").trim();
+    if (!nameRaw) { say("Enter a name."); return; }
+    const name = nameRaw.replace(/\s+/g, " ").trim();
+    const nameLower = name.toLowerCase();
+
+    // players collection: { name, nameLower, createdAt }
+    const { addDoc, collection: coll, query, where, getDocs } =
+      await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js");
+
+    // prevent duplicates (case-insensitive)
+    const q = query(coll(db, "players"), where("nameLower", "==", nameLower));
+    const existing = await getDocs(q);
+    if (!existing.empty) { say("Player already exists."); return; }
+
+    await addDoc(coll(db, "players"), { name, nameLower, createdAt: new Date() });
+    nameInput.value = "";
+    say("Player added.");
+    await refreshPlayerList(); // refresh UI
+  };
+
+  // List players
+  async function refreshPlayerList() {
+    listEl.innerHTML = "Loading...";
+    const { getDocs, collection: coll } =
+      await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js");
+    const snap = await getDocs(coll(db, "players"));
+    const items = [];
+    snap.forEach(d => items.push(d.data().name));
+    items.sort((a,b)=>a.localeCompare(b));
+    listEl.innerHTML = items.length
+      ? items.map(n => `<li>${n}</li>`).join("")
+      : "<li>No players yet.</li>";
+  }
+
+  // initial load
+  refreshPlayerList();
 }
 
 // helper: wait for Firebase auth user (max ~5s)
