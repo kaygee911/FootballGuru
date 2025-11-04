@@ -134,6 +134,15 @@ async function ensureAdminView() {
   const db = window._fb.db;
   const s = await getDoc(doc(db, "users", u.uid));
   const isAdmin = s.exists() && s.data().admin === true;
+  const adminPlayers = document.getElementById("admin-players");
+  
+  if (adminPlayers) {
+    adminPlayers.style.display = isAdmin ? "block" : "none";
+    if (isAdmin && !adminPlayers.dataset.wired) {
+      adminPlayers.dataset.wired = "1";   // avoid double-wiring
+      wireAdminPlayers();                 // attach Add Player logic
+    }
+  }
 
   const adminDash = document.getElementById("admin-dashboard");
   const adminAuth = document.getElementById("admin-auth");
