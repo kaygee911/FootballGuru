@@ -175,13 +175,14 @@ async function renderLeaderboard() {
     lb.id = "leaderboard";
     root.appendChild(lb);
   }
-  const body = rows.map((r, i) => {
+  const bodyArr = await Promise.all(rows.map(async (r, i) => {
     const nameSnap = await getDoc(doc(db, "users", r.uid));
     const name = nameSnap.exists() ? nameSnap.data().name : r.uid.slice(0, 6);
-  
     const delta = r.delta === 0 ? "0" : (r.delta > 0 ? `+${r.delta}` : `${r.delta}`);
     return `<tr><td>${i + 1}</td><td>${name}</td><td>${r.pts}</td><td>${delta}</td></tr>`;
-  }).join("") || `<tr><td>–</td><td>No picks</td><td>0</td><td>0</td></tr>`;
+  }));
+
+  const body = bodyArr.join("") || `<tr><td>–</td><td>No picks</td><td>0</td><td>0</td></tr>`;
 
   lb.innerHTML = `
     <h2>Leaderboard</h2>
