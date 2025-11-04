@@ -23,6 +23,17 @@ const matches = [
 // Render helpers
 function $(sel) { return document.querySelector(sel); }
 
+async function renderMe() {
+  await waitForUser();
+  const u = window._fb?.user;
+  if (!u) return;
+  const db = window._fb.db;
+  const s = await getDoc(doc(db, "users", u.uid));
+  const name = s.exists() ? s.data().name : u.uid.slice(0,6);
+  const slot = document.getElementById("me");
+  if (slot) slot.textContent = `Player: ${name}`;
+}
+
 async function ensureUserName() {
   // wait for Firebase user
   for (let i = 0; i < 20; i++) {
