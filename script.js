@@ -14,7 +14,8 @@ const state = {
 
 // Minimal demo: one mock match + simple scoring logic
 const matches = [
-  { id: "m1", home: "Team A", away: "Team B", kickoff: "2025-11-10T18:00:00Z" }
+  { id: "m1", home: "Team A", away: "Team B", kickoff: "2025-11-10T18:00:00Z" },
+  { id: "m2", home: "Team C", away: "Team D", kickoff: "2025-11-11T18:00:00Z" }
 ];
 
 // Render helpers
