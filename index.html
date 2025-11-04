@@ -9,6 +9,13 @@
 <body>
     <h1>Welcome to FootballGuru</h1>
     <div id="me"></div>
+    <div id="admin-dashboard" style="display:none;">
+        <h2>Admin Dashboard</h2>
+        <p>Use this area to manage matches, enter results, or view user activity.</p>
+        <button id="toggle-results">Enter Results Mode</button>
+        <!-- Future admin tools can go here -->
+    </div>
+
     <p>Predict match results for fun and climb the leaderboard!</p>
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
