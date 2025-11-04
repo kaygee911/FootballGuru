@@ -125,23 +125,34 @@ async function ensureAdminView() {
   const isAdmin = s.exists() && s.data().admin === true;
 
   const adminDash = document.getElementById("admin-dashboard");
-  if (adminDash) adminDash.style.display = isAdmin ? "block" : "none";
+  const adminAuth = document.getElementById("admin-auth");
+  const toggleBtn = document.getElementById("toggle-results");
 
+  // Always show the Admin Dashboard so non-admins can see the login form
+  if (adminDash) adminDash.style.display = "block";
+
+  // Show the login form if NOT admin; hide it if admin
+  if (adminAuth) adminAuth.style.display = isAdmin ? "none" : "block";
+
+  // Show admin-only controls ONLY if admin
+  if (toggleBtn) toggleBtn.style.display = isAdmin ? "" : "none";
   document.querySelectorAll(".save-result").forEach(btn => {
     btn.style.display = isAdmin ? "" : "none";
   });
 
-  const toggle = document.getElementById("toggle-results");
-  if (toggle && isAdmin) {
-    toggle.onclick = () => {
-      const show = toggle.dataset.mode !== "on";
-      toggle.dataset.mode = show ? "on" : "off";
+  // Wire the toggle only when admin
+  if (toggleBtn && isAdmin && !toggleBtn.dataset.wired) {
+    toggleBtn.dataset.wired = "1";
+    toggleBtn.onclick = () => {
+      const show = toggleBtn.dataset.mode !== "on";
+      toggleBtn.dataset.mode = show ? "on" : "off";
       document.querySelectorAll(".save-result").forEach(btn => {
         btn.style.visibility = show ? "visible" : "hidden";
       });
     };
   }
 }
+
 
 async function ensureUserName() {
   // wait for Firebase user
