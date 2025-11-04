@@ -1,6 +1,7 @@
 // FootballGuru starter JS
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
 // App state placeholders (hook these to Firebase later)
 const state = {
@@ -18,6 +19,63 @@ const matches = [
 
 // Render helpers
 function $(sel) { return document.querySelector(sel); }
+
+// add with your other auth imports
+import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+// admin auth wiring
+async function wireAdminAuth() {
+  await waitForUser();
+  const auth = window._fb?.auth;
+  const db   = window._fb?.db;
+  if (!auth || !db) return;
+
+  const emailEl = document.getElementById("admin-email");
+  const passEl  = document.getElementById("admin-pass");
+  const loginBt = document.getElementById("admin-login");
+  const outBt   = document.getElementById("admin-logout");
+  const status  = document.getElementById("admin-auth-status");
+  if (!emailEl || !passEl || !loginBt || !outBt || !status) return;
+
+  const setStatus = (msg) => { status.textContent = msg; };
+
+  loginBt.onclick = async () => {
+    const email = (emailEl.value || "").trim();
+    const pass  = (passEl.value || "").trim();
+    if (!email || !pass) { setStatus("Enter email and password."); return; }
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      setStatus("Admin logged in.");
+      outBt.style.display = "";
+      loginBt.style.display = "none";
+      // refresh UI for admin
+      ensureAdminView();
+      renderLeaderboard();
+    } catch (e) {
+      setStatus("Login failed.");
+      console.error(e);
+    }
+  };
+
+  outBt.onclick = async () => {
+    try {
+      await signOut(auth);
+      setStatus("Signed out. Returning to guest mode…");
+      // fall back to anonymous so users can still play
+      const { signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js");
+      await signInAnonymously(auth);
+      // reset UI
+      loginBt.style.display = "";
+      outBt.style.display = "none";
+      ensureAdminView();
+      renderLeaderboard();
+      renderMe();
+    } catch (e) {
+      setStatus("Logout failed.");
+      console.error(e);
+    }
+  };
+}
 
 async function wireGate() {
   await waitForUser();
@@ -275,6 +333,7 @@ async function renderLeaderboard() {
 (async function init() {
   await waitForUser();
   wireGate();
+  wireAdminAuth();
 })();
 
 
