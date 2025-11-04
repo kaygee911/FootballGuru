@@ -436,6 +436,31 @@ async function renderLeaderboard() {
   `;
 }
 
+async function wireSwitchUser() {
+  const btn = document.getElementById("switch-user");
+  if (!btn) return;
+
+  btn.onclick = async () => {
+    const auth = window._fb?.auth;
+    const db = window._fb?.db;
+    if (!auth || !db) return;
+
+    // Clear name for this UID (optional but clean)
+    const u = window._fb.user;
+    if (u) {
+      await setDoc(doc(db, "users", u.uid), { name: null, nameLower: null }, { merge: true });
+    }
+
+    // Sign out + return to anonymous (like reset)
+    await signOut(auth);
+    const { signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js");
+    await signInAnonymously(auth);
+
+    // Reset UI to show name gate again
+    document.getElementById("app").style.display = "none";
+    document.getElementById("gate").style.display = "block";
+  };
+}
 
 
 // Demo boot
@@ -449,6 +474,7 @@ async function renderLeaderboard() {
   await waitForUser();
   wireGate();
   wireAdminAuth();
+  wireSwitchUser();
 })();
 
 
