@@ -119,7 +119,7 @@ async function wireGate() {
 
   // allowed: save name to users/{uid} and continue
   const u = window._fb.user;
-  await setDoc(doc(db, "users", u.uid), { name: nameTyped, createdAt: new Date() }, { merge: true });
+ await setDoc(doc(db, "users", u.uid), { name: nameTyped, nameLower, createdAt: new Date() }, { merge: true });
   const userDash = document.getElementById("user-dashboard");
   if (userDash) userDash.style.display = "block";
   renderMe();
