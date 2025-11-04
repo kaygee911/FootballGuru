@@ -7,40 +7,50 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Welcome to FootballGuru</h1>
-  <p>Predict match results for fun and climb the leaderboard!</p>
+    <h1>Welcome to FootballGuru</h1>
+    <p>Predict match results for fun and climb the leaderboard!</p>
 
-  <!-- Name gate -->
-  <div id="gate">
-    <p>Please enter your name to continue.</p>
-    <input id="gate-name" type="text" placeholder="Your name" />
-    <button id="gate-continue">Continue</button>
-  </div>
+    <!-- Name gate -->
+    <div id="gate">
+        <p>Please enter your name to continue.</p>
+        <input id="gate-name" type="text" placeholder="Your name" />
+        <button id="gate-continue">Continue</button>
+    </div>
 
-  <!-- App content (hidden until after name) -->
-  <div id="app" style="display:none;">
-    <div id="me"></div>
-    <div id="admin-dashboard" style="display:none;">
-      <h2>Admin Dashboard</h2>
-      <!-- Admin login/logout UI -->
-      <div id="admin-auth">
-        <h3>Admin Sign-in</h3>
-        <input id="admin-email" type="email" placeholder="Admin email" />
-        <input id="admin-pass" type="password" placeholder="Password" />
-        <button id="admin-login">Login</button>
-        <button id="admin-logout" style="display:none;">Logout</button>
-        <p id="admin-auth-status"></p>
-      </div>
-        
-      <p>Use this area to manage matches, enter results, or view user activity.</p>
-      <button id="toggle-results">Enter Results Mode</button>
+    <!-- App content (hidden until after name) -->
+    <div id="app" style="display:none;">
+        <div id="me"></div>
+        <div id="admin-dashboard" style="display:none;">
+            <h2>Admin Dashboard</h2>
+              
+            <!-- Admin login/logout UI -->
+            <div id="admin-auth">
+                <h3>Admin Sign-in</h3>
+                <input id="admin-email" type="email" placeholder="Admin email" />
+                <input id="admin-pass" type="password" placeholder="Password" />
+                <button id="admin-login">Login</button>
+                <button id="admin-logout" style="display:none;">Logout</button>
+                <p id="admin-auth-status"></p>
+            </div>
+            <!-- Add players -->
+            <div id="admin-players" style="margin-top:12px;">
+                <h3>Players</h3>
+                <input id="player-name" type="text" placeholder="Player full name" />
+                <button id="add-player">Add Player</button>
+                <p id="player-msg"></p>
+                <ul id="player-list"></ul>
+            </div>
+    
+            <p>Use this area to manage matches, enter results, or view user activity.</p>
+            <button id="toggle-results">Enter Results Mode</button>
+        </div>
+    
+        <div id="user-dashboard" style="display:none;">
+            <h2>My Dashboard</h2>
+            <div id="predictions"></div>
+            <div id="leaderboard"></div>
+        </div>
     </div>
-    <div id="user-dashboard" style="display:none;">
-    <h2>My Dashboard</h2>
-      <div id="predictions"></div>
-      <div id="leaderboard"></div>
-    </div>
-  </div>
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
