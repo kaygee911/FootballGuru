@@ -274,7 +274,19 @@ async function waitForUser() {
   }
   return null;
 }
-  
+
+async function getCurrentPlayerProfile() {
+  const db = window._fb?.db;
+  const u  = window._fb?.user;
+  if (!db || !u) return null;
+  const snap = await getDoc(doc(db, "users", u.uid));
+  if (!snap.exists()) return null;
+  const v = snap.data();
+  const name  = (v.name || "").trim();
+  const lower = (v.nameLower || name.toLowerCase());
+  return { name, nameLower: lower };
+}
+
 function renderPredictions() {
   const root = document.body;
   const containerId = "predictions";
@@ -308,8 +320,18 @@ function renderPredictions() {
       const user = await waitForUser();
       if (!user) { alert("Still signing in—try again in a moment."); return; }
       const db = window._fb.db;
+      // get the player’s name from their profile and store it with the pick
+      const prof = await getCurrentPlayerProfile();
       const pickRef = doc(db, "picks", `${user.uid}_${id}`);
-      await setDoc(pickRef, { matchId: id, home, away, timestamp: new Date() });
+      await setDoc(pickRef, {
+        matchId: id,
+        home,
+        away,
+        playerName: prof?.name || "",
+        playerLower: prof?.nameLower || "",
+        timestamp: new Date()
+      }, { merge: true });
+    
       alert("Pick saved to database!");
       renderLeaderboard();
     }
