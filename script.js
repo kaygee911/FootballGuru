@@ -451,12 +451,12 @@ async function wireSwitchUser() {
       await setDoc(doc(db, "users", u.uid), { name: null, nameLower: null }, { merge: true });
     }
 
-    // Sign out + return to anonymous (like reset)
+    // Sign out, then go back to anonymous
     await signOut(auth);
     const { signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js");
     await signInAnonymously(auth);
 
-    // Reset UI to show name gate again
+    // Show the name gate again
     document.getElementById("app").style.display = "none";
     document.getElementById("gate").style.display = "block";
   };
