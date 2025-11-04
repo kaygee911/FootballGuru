@@ -30,6 +30,34 @@ async function renderMe() {
   if (slot) slot.textContent = `Player: ${name}`;
 }
 
+async function ensureAdminView() {
+  await waitForUser();
+  const u = window._fb?.user;
+  if (!u) return;
+
+  const db = window._fb.db;
+  const s = await getDoc(doc(db, "users", u.uid));
+  const isAdmin = s.exists() && s.data().admin === true;
+
+  const adminDash = document.getElementById("admin-dashboard");
+  if (adminDash) adminDash.style.display = isAdmin ? "block" : "none";
+
+  document.querySelectorAll(".save-result").forEach(btn => {
+    btn.style.display = isAdmin ? "" : "none";
+  });
+
+  const toggle = document.getElementById("toggle-results");
+  if (toggle && isAdmin) {
+    toggle.onclick = () => {
+      const show = toggle.dataset.mode !== "on";
+      toggle.dataset.mode = show ? "on" : "off";
+      document.querySelectorAll(".save-result").forEach(btn => {
+        btn.style.visibility = show ? "visible" : "hidden";
+      });
+    };
+  }
+}
+
 async function ensureUserName() {
   // wait for Firebase user
   for (let i = 0; i < 20; i++) {
