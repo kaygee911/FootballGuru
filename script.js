@@ -2,6 +2,7 @@
 import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 // App state placeholders (hook these to Firebase later)
 const state = {
@@ -68,6 +69,7 @@ function renderPredictions() {
       const pickRef = doc(db, "picks", `${user.uid}_${id}`);
       await setDoc(pickRef, { matchId: id, home, away, timestamp: new Date() });
       alert("Pick saved to database!");
+      renderLeaderboard();
     }
 
     if (e.target.classList.contains("save-result")) {
@@ -77,6 +79,7 @@ function renderPredictions() {
       const resultRef = doc(db, "results", id);
       await setDoc(resultRef, { matchId: id, home, away, timestamp: new Date() });
       alert("Result saved!");
+      renderLeaderboard();
     }
   });
 }
@@ -98,7 +101,47 @@ function scorePick(pick, result) {
   return outcome(pick.home, pick.away) === outcome(result.home, result.away) ? 1 : 0;
 }
 
-function renderLeaderboard() {
+async function renderLeaderboard() {
+  const db = window._fb?.db;
+  if (!db) return;
+
+  // fetch all results
+  const resultsSnap = await getDocs(collection(db, "results"));
+  const results = {};
+  resultsSnap.forEach(d => {
+    const v = d.data();
+    results[d.id] = { home: Number(v.home ?? 0), away: Number(v.away ?? 0) };
+  });
+
+  // fetch all picks
+  const picksSnap = await getDocs(collection(db, "picks"));
+  const totals = {}; // { uid: points }
+  picksSnap.forEach(d => {
+    const data = d.data();
+    const uid = String(d.id).split("_")[0];
+    const mid = data.matchId;
+    const pick = { home: Number(data.home ?? 0), away: Number(data.away ?? 0) };
+    const res  = results[mid];
+    const pts = scorePick(pick, res);
+    totals[uid] = (totals[uid] || 0) + pts;
+  });
+
+  // sort leaderboard
+  const rows = Object.entries(totals)
+    .map(([uid, pts]) => ({ uid, pts }))
+    .sort((a, b) => b.pts - a.pts);
+
+  // compute places moved (Δ) vs previous render
+  const prevOrder = state.prevOrder || {};
+  const currOrder = {};
+  rows.forEach((r, i) => { currOrder[r.uid] = i + 1; });
+  rows.forEach((r, i) => {
+    const prev = prevOrder[r.uid] || i + 1;
+    r.delta = prev - (i + 1); // positive = moved up
+  });
+  state.prevOrder = currOrder;
+
+  // render table
   const root = document.body;
   let lb = document.getElementById("leaderboard");
   if (!lb) {
@@ -106,20 +149,19 @@ function renderLeaderboard() {
     lb.id = "leaderboard";
     root.appendChild(lb);
   }
-  // Demo: single user “You”
-  const you = "You";
-  const total = matches.reduce((sum, m) => sum + scorePick(state.predictions[m.id], state.results[m.id]), 0);
-  state.scores[you] = total;
+  const body = rows.map((r, i) => {
+    const name = r.uid.slice(0, 6); // placeholder name for now
+    const delta = r.delta === 0 ? "0" : (r.delta > 0 ? `+${r.delta}` : `${r.delta}`);
+    return `<tr><td>${i + 1}</td><td>${name}</td><td>${r.pts}</td><td>${delta}</td></tr>`;
+  }).join("") || `<tr><td>–</td><td>No picks</td><td>0</td><td>0</td></tr>`;
 
   lb.innerHTML = `
     <h2>Leaderboard</h2>
     <table>
-      <thead><tr><th>#</th><th>Name</th><th>Pts</th><th>Δ</th></tr></thead>
-      <tbody>
-        <tr><td>1</td><td>${you}</td><td>${total}</td><td>0</td></tr>
-      </tbody>
+      <thead><tr><th>#</th><th>User</th><th>Pts</th><th>Δ</th></tr></thead>
+      <tbody>${body}</tbody>
     </table>
-    <p><em>(Δ shows places moved; demo fixed at 0 for now)</em></p>
+    <p><em>(User shows first 6 chars of ID. We’ll add nicknames later.)</em></p>
   `;
 }
 
