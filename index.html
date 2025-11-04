@@ -22,6 +22,16 @@
     <div id="me"></div>
     <div id="admin-dashboard" style="display:none;">
       <h2>Admin Dashboard</h2>
+      <!-- Admin login/logout UI -->
+      <div id="admin-auth">
+        <h3>Admin Sign-in</h3>
+        <input id="admin-email" type="email" placeholder="Admin email" />
+        <input id="admin-pass" type="password" placeholder="Password" />
+        <button id="admin-login">Login</button>
+        <button id="admin-logout" style="display:none;">Logout</button>
+        <p id="admin-auth-status"></p>
+      </div>
+        
       <p>Use this area to manage matches, enter results, or view user activity.</p>
       <button id="toggle-results">Enter Results Mode</button>
     </div>
