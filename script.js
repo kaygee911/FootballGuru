@@ -1,4 +1,5 @@
 // FootballGuru starter JS
+import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 // App state placeholders (hook these to Firebase later)
 const state = {
@@ -19,6 +20,8 @@ function $(sel) { return document.querySelector(sel); }
 function renderPredictions() {
   const root = document.body;
   const containerId = "predictions";
+  const userId = window._fb?.user?.uid;
+  
   let container = document.getElementById(containerId);
   if (!container) {
     container = document.createElement("div");
@@ -43,7 +46,20 @@ function renderPredictions() {
       const home = parseInt(wrap.querySelector(".home").value || "0", 10);
       const away = parseInt(wrap.querySelector(".away").value || "0", 10);
       state.predictions[id] = { home, away };
-      alert("Saved!");
+      
+      if (userId) {
+        const pickRef = doc(window._fb.db, "picks", `${userId}_${id}`);
+        setDoc(pickRef, {
+          matchId: id,
+          home,
+          away,
+          timestamp: new Date()
+        }).then(() => {
+          alert("Pick saved to database!");
+        }).catch(console.error);
+      } else {
+        alert("User not signed in yet. Try again shortly.");
+      }
     }
   });
 }
