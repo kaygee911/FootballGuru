@@ -272,10 +272,7 @@ async function renderLeaderboard() {
 
 (async function init() {
   await waitForUser();
-  renderPredictions();
-  renderLeaderboard();
-  ensureUserName();
-  renderMe();
-  ensureAdminView();
+  wireGate();
 })();
+
 
