@@ -1,0 +1,62 @@
+/* FootballGuru starter CSS */
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background-color: #f7f7f7;
+  color: #333;
+}
+
+h1, h2 {
+  text-align: center;
+  color: #006400; /* Dark green for football vibes */
+}
+
+#predictions, #leaderboard {
+  background: #fff;
+  padding: 15px;
+  margin: 20px auto;
+  border-radius: 8px;
+  max-width: 600px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+label {
+  margin-right: 10px;
+}
+
+button.save {
+  margin-top: 10px;
+  background-color: #006400;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button.save:hover {
+  background-color: #008000;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+table th, table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+table th {
+  background-color: #006400;
+  color: white;
+}
+
+em {
+  font-size: 0.85em;
+  color: #666;
+}
