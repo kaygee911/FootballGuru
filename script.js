@@ -20,9 +20,6 @@ const matches = [
 // Render helpers
 function $(sel) { return document.querySelector(sel); }
 
-// add with your other auth imports
-import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-
 // admin auth wiring
 async function wireAdminAuth() {
   await waitForUser();
