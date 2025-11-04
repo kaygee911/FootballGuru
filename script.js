@@ -1,5 +1,7 @@
 // FootballGuru starter JS
 import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 // App state placeholders (hook these to Firebase later)
 const state = {
@@ -16,15 +18,19 @@ const matches = [
 
 // Render helpers
 function $(sel) { return document.querySelector(sel); }
+
 // helper: wait for Firebase auth user (max ~5s)
-  async function waitForUser() {
-    for (let i = 0; i < 20; i++) {
-      const u = window._fb?.user;
-      if (u) return u;
-      await new Promise(r => setTimeout(r, 250));
-    }
-    return null;
+async function waitForUser() {
+  const auth = window._fb?.auth;
+  const db = window._fb?.db;
+
+  for (let i = 0; i < 20; i++) {
+    const u = window._fb?.user;
+    if (u) return u;
+    await new Promise(r => setTimeout(r, 250));
   }
+  return null;
+}
   
 function renderPredictions() {
   const root = document.body;
@@ -61,7 +67,8 @@ function renderPredictions() {
         return;
       }
   
-      const pickRef = doc(window._fb.db, "picks", `${user.uid}_${id}`);
+      const db = window._fb.db;
+      const pickRef = doc(db, "picks", `${user.uid}_${id}`);
       await setDoc(pickRef, { matchId: id, home, away, timestamp: new Date() });
       alert("Pick saved to database!");
     }
