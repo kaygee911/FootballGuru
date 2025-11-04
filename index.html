@@ -7,40 +7,27 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Welcome to FootballGuru</h1>
+  <h1>Welcome to FootballGuru</h1>
+  <p>Predict match results for fun and climb the leaderboard!</p>
+
+  <!-- Name gate -->
+  <div id="gate">
+    <p>Please enter your name to continue.</p>
+    <input id="gate-name" type="text" placeholder="Your name" />
+    <button id="gate-continue">Continue</button>
+  </div>
+
+  <!-- App content (hidden until after name) -->
+  <div id="app" style="display:none;">
     <div id="me"></div>
     <div id="admin-dashboard" style="display:none;">
-        <h2>Admin Dashboard</h2>
-        <p>Use this area to manage matches, enter results, or view user activity.</p>
-        <button id="toggle-results">Enter Results Mode</button>
-        <!-- Future admin tools can go here -->
+      <h2>Admin Dashboard</h2>
+      <p>Use this area to manage matches, enter results, or view user activity.</p>
+      <button id="toggle-results">Enter Results Mode</button>
     </div>
+  </div>
 
-    <p>Predict match results for fun and climb the leaderboard!</p>
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-      import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-      import { getFirestore } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-    
-      const firebaseConfig = {
-        apiKey: "AIzaSyBN6wPHpan0FqzQdcg-qg7ckWDo0BNZ5fk",
-        authDomain: "footballguru-59db8.firebaseapp.com",
-        projectId: "footballguru-59db8",
-        storageBucket: "footballguru-59db8.firebasestorage.app",
-        messagingSenderId: "881770920823",
-        appId: "1:881770920823:web:87864f0bd2d65ab9caff72"
-      };
-    
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-    
-      // Anonymous sign-in
-      signInAnonymously(auth).catch(console.error);
-      onAuthStateChanged(auth, (user) => { window._fb = { app, auth, db, user }; });
-    
-    </script>
-
-    <script type="module" src="script.js?v=3"></script>
+  <script type="module" src="script.js?v=4"></script>
 </body>
+
 </html>
