@@ -83,26 +83,37 @@ async function wireGate() {
   const app  = document.getElementById("app");
   const input = document.getElementById("gate-name");
   const btn   = document.getElementById("gate-continue");
+  const adminDash = document.getElementById("admin-dashboard");
+  const userDash  = document.getElementById("user-dashboard");
+
   if (!gate || !app || !input || !btn) return;
 
   btn.onclick = async () => {
-    const name = (input.value || "").trim();
-    if (!name) { alert("Please enter your name."); return; }
-
-    const db = window._fb.db;
-    await setDoc(doc(db, "users", u.uid), { name, createdAt: new Date() }, { merge: true });
+    const name = (input.value || "").trim().toLowerCase();
+    if (!name) {
+      alert("Please enter your name.");
+      return;
+    }
 
     gate.style.display = "none";
-    app.style.display  = "block";
-    const userDash = document.getElementById("user-dashboard");
-    if (userDash) userDash.style.display = "block";
+    app.style.display = "block";
 
-    renderMe();
-    ensureAdminView();
-    renderPredictions();
-    renderLeaderboard();
+    if (name === "admin") {
+      // Admin path: Show only admin dashboard + auth form
+      adminDash.style.display = "block";
+      wireAdminAuth();
+    } else {
+      // User path: Save name, show user dashboard
+      const db = window._fb.db;
+      await setDoc(doc(db, "users", u.uid), { name, createdAt: new Date() }, { merge: true });
+      renderMe();
+      userDash.style.display = "block";
+      renderPredictions();
+      renderLeaderboard();
+    }
   };
 }
+
 
 async function renderMe() {
   await waitForUser();
