@@ -240,5 +240,7 @@ renderPredictions();
 renderLeaderboard();
 ensureUserName(); // ask for player name
 renderMe(); // show player name at the top of the page
+ensureAdminView();
+
 
 
