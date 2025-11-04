@@ -236,11 +236,18 @@ async function renderLeaderboard() {
 }
 
 // Demo boot
-renderPredictions();
-renderLeaderboard();
-ensureUserName(); // ask for player name
-renderMe(); // show player name at the top of the page
-ensureAdminView();
+//enderPredictions();
+//renderLeaderboard();
+//ensureUserName(); // ask for player name
+//renderMe(); // show player name at the top of the page
+//ensureAdminView();
 
-
+(async function init() {
+  await waitForUser();
+  renderPredictions();
+  renderLeaderboard();
+  ensureUserName();
+  renderMe();
+  ensureAdminView();
+})();
 
