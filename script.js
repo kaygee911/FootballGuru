@@ -16,7 +16,16 @@ const matches = [
 
 // Render helpers
 function $(sel) { return document.querySelector(sel); }
-
+// helper: wait for Firebase auth user (max ~5s)
+  async function waitForUser() {
+    for (let i = 0; i < 20; i++) {
+      const u = window._fb?.user;
+      if (u) return u;
+      await new Promise(r => setTimeout(r, 250));
+    }
+    return null;
+  }
+  
 function renderPredictions() {
   const root = document.body;
   const containerId = "predictions";
@@ -39,27 +48,22 @@ function renderPredictions() {
     </div>
   `).join("");
 
-  container.addEventListener("click", (e) => {
+  container.addEventListener("click", async (e) => {
     if (e.target.classList.contains("save")) {
       const wrap = e.target.closest("[data-id]");
       const id = wrap.getAttribute("data-id");
       const home = parseInt(wrap.querySelector(".home").value || "0", 10);
       const away = parseInt(wrap.querySelector(".away").value || "0", 10);
-      state.predictions[id] = { home, away };
-      
-      if (userId) {
-        const pickRef = doc(window._fb.db, "picks", `${userId}_${id}`);
-        setDoc(pickRef, {
-          matchId: id,
-          home,
-          away,
-          timestamp: new Date()
-        }).then(() => {
-          alert("Pick saved to database!");
-        }).catch(console.error);
-      } else {
-        alert("User not signed in yet. Try again shortly.");
+  
+      const user = await waitForUser();
+      if (!user) {
+        alert("Still signing in—try again in a moment.");
+        return;
       }
+  
+      const pickRef = doc(window._fb.db, "picks", `${user.uid}_${id}`);
+      await setDoc(pickRef, { matchId: id, home, away, timestamp: new Date() });
+      alert("Pick saved to database!");
     }
   });
 }
