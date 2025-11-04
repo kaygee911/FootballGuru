@@ -19,6 +19,34 @@ const matches = [
 // Render helpers
 function $(sel) { return document.querySelector(sel); }
 
+async function wireGate() {
+  await waitForUser();
+  const u = window._fb?.user;
+  if (!u) return;
+
+  const gate = document.getElementById("gate");
+  const app  = document.getElementById("app");
+  const input = document.getElementById("gate-name");
+  const btn   = document.getElementById("gate-continue");
+  if (!gate || !app || !input || !btn) return;
+
+  btn.onclick = async () => {
+    const name = (input.value || "").trim();
+    if (!name) { alert("Please enter your name."); return; }
+
+    const db = window._fb.db;
+    await setDoc(doc(db, "users", u.uid), { name, createdAt: new Date() }, { merge: true });
+
+    gate.style.display = "none";
+    app.style.display  = "block";
+
+    renderMe();
+    ensureAdminView();
+    renderPredictions();
+    renderLeaderboard();
+  };
+}
+
 async function renderMe() {
   await waitForUser();
   const u = window._fb?.user;
