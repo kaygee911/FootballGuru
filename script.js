@@ -3,6 +3,8 @@ import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
 
 // App state placeholders (hook these to Firebase later)
 const state = {
@@ -20,6 +22,29 @@ const matches = [
 
 // Render helpers
 function $(sel) { return document.querySelector(sel); }
+
+async function ensureUserName() {
+  // wait for Firebase user
+  for (let i = 0; i < 20; i++) {
+    const u = window._fb?.user;
+    if (u) break;
+    await new Promise(r => setTimeout(r, 250));
+  }
+  const u = window._fb?.user;
+  if (!u) return;
+
+  const db = window._fb.db;
+  const profileRef = doc(db, "users", u.uid);
+  const snap = await getDoc(profileRef);
+  if (snap.exists()) return;
+
+  let name = "";
+  while (!name) {
+    name = (prompt("Enter your first name (for leaderboard):") || "").trim();
+    if (!name) alert("Name cannot be empty.");
+  }
+  await setDoc(profileRef, { name, createdAt: new Date() });
+}
 
 // helper: wait for Firebase auth user (max ~5s)
 async function waitForUser() {
@@ -151,7 +176,9 @@ async function renderLeaderboard() {
     root.appendChild(lb);
   }
   const body = rows.map((r, i) => {
-    const name = r.uid.slice(0, 6); // placeholder name for now
+    const nameSnap = await getDoc(doc(db, "users", r.uid));
+    const name = nameSnap.exists() ? nameSnap.data().name : r.uid.slice(0, 6);
+  
     const delta = r.delta === 0 ? "0" : (r.delta > 0 ? `+${r.delta}` : `${r.delta}`);
     return `<tr><td>${i + 1}</td><td>${name}</td><td>${r.pts}</td><td>${delta}</td></tr>`;
   }).join("") || `<tr><td>–</td><td>No picks</td><td>0</td><td>0</td></tr>`;
@@ -169,6 +196,7 @@ async function renderLeaderboard() {
 // Demo boot
 renderPredictions();
 renderLeaderboard();
+ensureUserName(); // ask for player name
 
 // Example: set a final result later (you can test scoring by uncommenting)
 // setResult("m1", 1, 0);
