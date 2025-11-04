@@ -10,4 +10,4 @@ Features:
 
 Planned tournaments: AFCON, Euros, World Cup
 
-🛠️ Work in progress — built with HTML, CSS, and JavaScript.
+Work in progress — built with HTML, CSS, and JavaScript.
