@@ -32,6 +32,29 @@
     </div>
   </div>
 
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+      import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+      import { getFirestore } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    
+      const firebaseConfig = {
+        apiKey: "AIzaSyBN6wPHpan0FqzQdcg-qg7ckWDo0BNZ5fk",
+        authDomain: "footballguru-59db8.firebaseapp.com",
+        projectId: "footballguru-59db8",
+        storageBucket: "footballguru-59db8.firebasestorage.app",
+        messagingSenderId: "881770920823",
+        appId: "1:881770920823:web:87864f0bd2d65ab9caff72"
+      };
+    
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+    
+      // Anonymous sign-in + expose handles
+      signInAnonymously(auth).catch(console.error);
+      onAuthStateChanged(auth, (user) => { window._fb = { app, auth, db, user }; });
+    </script>
+
   <script type="module" src="script.js?v=4"></script>
 </body>
 
